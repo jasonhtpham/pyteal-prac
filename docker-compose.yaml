@@ -25,7 +25,7 @@ services:
     volumes:
       - type: bind
         source: ../pyteal-prac
-        target: /source
+        target: /data
 
   indexer:
     container_name: "algorand-sandbox-indexer"
