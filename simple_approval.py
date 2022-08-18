@@ -1,24 +1,15 @@
 from pyteal import *
 
 def simple_approval():
-  # This function will be called upon SC initialization.
-    on_create = Seq([
-      App.globalPut(Bytes("number"), Int(0)),
-      Return(Int(1)),
-    ])
+    # TODO2: This sequence will be executed when the smart contract is initialized.
 
-    # Set the global variable to provided value
-    set_number = Seq([
-      # Take 2nd argument in the transaction as number
-      App.globalPut(Bytes("number"),Btoi(Txn.application_args[1])),
-      Return(Int(1)),
-    ])
+    # TODO4: The sequence to set the global variable number to provided value
 
-    # Determine which function to call
-    called_function = Txn.application_args[0]
-    handle_noop = Cond(
-      [called_function == Bytes("set_number"), set_number]
-    )
+    # TODO3: Determine which function to call based on the transaction argument
+    # TODO3: Based on called_function, call the relevant function
+    handle_noop = Seq([
+        Return(Int(1))
+    ])
 
     handle_optin = Seq([
         Return(Int(1))
@@ -33,17 +24,31 @@ def simple_approval():
     handle_deleteapp = Err()
 
     program = Cond(
-      
-        [Txn.application_id() == Int(0), on_create],
+        # TODO1: The function to call when the smart contract is initialized
+        # The NoOp transaction calls handle_noop function
         [Txn.on_completion() == OnComplete.NoOp, handle_noop],
+        # The OptIn transaction calls handle_optin function
         [Txn.on_completion() == OnComplete.OptIn, handle_optin],
+        # The CloseOut transaction calls handle_closeout function
         [Txn.on_completion() == OnComplete.CloseOut, handle_closeout],
+        # The UpdateApplication transaction calls handle_updateapp function
         [Txn.on_completion() == OnComplete.UpdateApplication, handle_updateapp],
+        # The DeleteApplication transaction calls handle_deleteapp function
         [Txn.on_completion() == OnComplete.DeleteApplication, handle_deleteapp]
     )
     return program
+
+
+def clear_state_program():
+  program = Seq([
+    Return(Int(1))
+  ])
+  return program
 
 with open('simple_approval.teal', 'w') as f:
     compiled = compileTeal(simple_approval(), Mode.Application, version=2)
     f.write(compiled)
 
+with open("simple_clear.teal", "w") as f:
+    compiled = compileTeal(clear_state_program(), mode=Mode.Application, version=2)
+    f.write(compiled)
